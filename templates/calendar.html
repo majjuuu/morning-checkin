@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Check-ins · Calendar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@1,9..144,400;1,9..144,500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <div class="sky">
+    <span class="blob blob-1"></span>
+    <span class="blob blob-2"></span>
+    <span class="blob blob-3"></span>
+  </div>
+
+  <main class="page">
+    <a href="{{ url_for('index') }}" class="cal-btn back-btn" title="Back to today" aria-label="Back to today">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 5l-7 7 7 7" />
+      </svg>
+    </a>
+
+    <header class="hero">
+      <p class="date">Your reflections</p>
+      <h1 class="greeting">Look back gently 🌙</h1>
+      <p class="subgreeting">Pick a day to revisit what you noticed about yourself.</p>
+    </header>
+
+    <section class="card">
+      <div class="cal-head">
+        <button id="prev" class="cal-nav" aria-label="Previous month">‹</button>
+        <h2 id="cal-title" class="cal-title">—</h2>
+        <button id="next" class="cal-nav" aria-label="Next month">›</button>
+      </div>
+
+      <div class="cal-weekdays">
+        <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+      </div>
+      <div id="cal-grid" class="cal-grid"></div>
+    </section>
+
+    <section class="card reflect" id="entry-card">
+      <h2><span class="dot dot-pink"></span><span id="entry-date">Today</span></h2>
+      <div id="entry-body"></div>
+    </section>
+
+    <footer class="foot">Every day you showed up is worth remembering. 🌸</footer>
+  </main>
+
+  <script>
+    const TODAY = "{{ today_str }}";
+    const MONTHS = ["January","February","March","April","May","June","July",
+                    "August","September","October","November","December"];
+
+    let entryDates = new Set();
+    let selected = TODAY;
+    // View month, derived from a date string's year/month.
+    let view = { y: parseInt(TODAY.slice(0, 4)), m: parseInt(TODAY.slice(5, 7)) - 1 };
+
+    const pad = (n) => String(n).padStart(2, "0");
+    const iso = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
+
+    function prettyDate(dstr) {
+      const [y, m, d] = dstr.split("-").map(Number);
+      return `${MONTHS[m - 1]} ${d}, ${y}`;
+    }
+
+    async function loadEntryDates() {
+      try {
+        const res = await fetch("/api/entry-dates");
+        entryDates = new Set(await res.json());
+      } catch { entryDates = new Set(); }
+    }
+
+    function renderGrid() {
+      document.getElementById("cal-title").textContent = `${MONTHS[view.m]} ${view.y}`;
+      const grid = document.getElementById("cal-grid");
+      grid.innerHTML = "";
+
+      const firstDay = new Date(view.y, view.m, 1).getDay();      // 0=Sun
+      const daysInMonth = new Date(view.y, view.m + 1, 0).getDate();
+
+      for (let i = 0; i < firstDay; i++) {
+        const blank = document.createElement("span");
+        blank.className = "cal-day blank";
+        grid.appendChild(blank);
+      }
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dstr = iso(view.y, view.m, d);
+        const cell = document.createElement("button");
+        cell.className = "cal-day";
+        cell.textContent = d;
+        if (dstr === TODAY) cell.classList.add("is-today");
+        if (dstr === selected) cell.classList.add("is-selected");
+        if (entryDates.has(dstr)) cell.classList.add("has-entry");
+        if (dstr > TODAY) cell.classList.add("is-future");
+        cell.addEventListener("click", () => selectDate(dstr));
+        grid.appendChild(cell);
+      }
+    }
+
+    async function selectDate(dstr) {
+      selected = dstr;
+      renderGrid();
+      const label = document.getElementById("entry-date");
+      const body = document.getElementById("entry-body");
+      label.textContent = (dstr === TODAY ? "Today · " : "") + prettyDate(dstr);
+      body.innerHTML = `<p class="entry-loading">Opening…</p>`;
+
+      try {
+        const res = await fetch(`/api/entry/${dstr}`);
+        const data = await res.json();
+        if (!data.exists) {
+          body.innerHTML = `<p class="entry-empty">No check-in saved for this day.${
+            dstr === TODAY ? ` <a href="{{ url_for('index') }}">Write today's →</a>` : ""
+          }</p>`;
+          return;
+        }
+        const wins = (data.wins || []).filter(w => w && w.trim());
+        const winsHtml = wins.length
+          ? `<ul class="entry-wins">${wins.map(w => `<li>${escapeHtml(w)}</li>`).join("")}</ul>`
+          : `<p class="entry-empty">No wins recorded.</p>`;
+        const improveHtml = (data.improve && data.improve.trim())
+          ? `<p class="entry-improve">${escapeHtml(data.improve)}</p>`
+          : `<p class="entry-empty">Nothing noted.</p>`;
+        body.innerHTML = `
+          <h3 class="entry-h">Three things you did well</h3>
+          ${winsHtml}
+          <h3 class="entry-h">One thing to do better</h3>
+          ${improveHtml}
+        `;
+      } catch {
+        body.innerHTML = `<p class="entry-empty">Couldn't load this entry.</p>`;
+      }
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/[&<>"']/g, c => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[c]));
+    }
+
+    document.getElementById("prev").addEventListener("click", () => {
+      view.m--; if (view.m < 0) { view.m = 11; view.y--; } renderGrid();
+    });
+    document.getElementById("next").addEventListener("click", () => {
+      view.m++; if (view.m > 11) { view.m = 0; view.y++; } renderGrid();
+    });
+
+    (async function init() {
+      await loadEntryDates();
+      renderGrid();
+      selectDate(TODAY);   // default to today
+    })();
+  </script>
+</body>
+</html>

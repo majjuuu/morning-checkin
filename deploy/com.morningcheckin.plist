@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  macOS LaunchAgent template for Morning Check-in.
+
+  SETUP:
+  1. Replace /ABSOLUTE/PATH/TO/morning-checkin below (3 places) with the real
+     absolute path to this project folder. Run `pwd` inside the folder to get it.
+  2. cp this file to ~/Library/LaunchAgents/com.morningcheckin.plist
+  3. launchctl load -w ~/Library/LaunchAgents/com.morningcheckin.plist
+
+  Keep the project in a LOCAL folder (not an iCloud-synced ~/Documents or
+  ~/Desktop), or a background agent may deadlock reading evicted files.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.morningcheckin</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/ABSOLUTE/PATH/TO/morning-checkin/venv/bin/python</string>
+        <string>/ABSOLUTE/PATH/TO/morning-checkin/app.py</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/ABSOLUTE/PATH/TO/morning-checkin</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PYTHONUNBUFFERED</key>
+        <string>1</string>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+
+    <key>ProcessType</key>
+    <string>Background</string>
+
+    <key>StandardOutPath</key>
+    <string>/ABSOLUTE/PATH/TO/morning-checkin/server.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/ABSOLUTE/PATH/TO/morning-checkin/server.err.log</string>
+</dict>
+</plist>
