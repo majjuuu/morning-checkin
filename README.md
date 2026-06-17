@@ -10,12 +10,20 @@ privately through its **"secret iCal address"** — there's no OAuth and no Goog
 Cloud project, and nothing leaves your machine except a read-only fetch of your
 own calendar feed.
 
+<p align="center">
+  <img src="docs/screenshot.png" alt="Morning Check-in home page" width="420" />
+</p>
+
 ## ✨ Features
 
 - Today's Google Calendar events, in your timezone (recurring events handled)
 - A gentle greeting + schedule note that **changes once per day**
 - Evening reflection form (3 wins + 1 improvement), saved per day
 - A calendar page to revisit past reflections — opens on today by default
+
+<p align="center">
+  <img src="docs/calendar.png" alt="Calendar view of past reflections" width="420" />
+</p>
 
 ## ✅ Requirements
 
