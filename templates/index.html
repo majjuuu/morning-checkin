@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Morning Check-in</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@1,9..144,400;1,9..144,500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <div class="sky">
+    <span class="blob blob-1"></span>
+    <span class="blob blob-2"></span>
+    <span class="blob blob-3"></span>
+  </div>
+
+  <main class="page">
+    <header class="hero">
+      <p class="date">{{ date_pretty }}</p>
+      <h1 class="greeting">
+        {% if display_name %}Good morning, {{ display_name }}.{% endif %}
+      </h1>
+      <p class="subgreeting">{{ greeting }}</p>
+    </header>
+
+    <section class="card schedule">
+      <h2><span class="dot"></span>Today's gentle plan</h2>
+
+      {% if calendar_error == 'no-url' %}
+        <p class="hint">
+          Add your Google Calendar's <strong>secret iCal address</strong> to
+          <code>config.json</code> to see today's events here.
+          <br /><span class="hint-sub">Google Calendar → Settings → your calendar → “Secret address in iCal format”.</span>
+        </p>
+      {% elif calendar_error == 'fetch-failed' %}
+        <p class="hint">Couldn’t reach your calendar just now. Take a breath — your day is still yours. 🌷</p>
+      {% elif events|length == 0 %}
+        <p class="hint">A wide-open day. Nothing scheduled — enjoy the quiet. 🍃</p>
+      {% else %}
+        <ul class="events">
+          {% for e in events %}
+          <li class="event {% if e.all_day %}all-day{% endif %}">
+            <span class="time">{{ e.time_label }}</span>
+            <span class="event-body">
+              <span class="summary">{{ e.summary }}</span>
+              {% if e.location %}<span class="location">{{ e.location }}</span>{% endif %}
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      <p class="note">{{ note }}</p>
+    </section>
+
+    <section class="card reflect">
+      <h2><span class="dot dot-pink"></span>Evening reflection</h2>
+      <p class="reflect-intro">When your day winds down, come back and notice the good.</p>
+
+      <form id="reflect-form">
+        <fieldset class="wins">
+          <legend>Three things I did well today</legend>
+          <label class="field">
+            <span class="num">1</span>
+            <input type="text" name="win" placeholder="A small win counts…"
+                   value="{{ saved.wins[0] if saved and saved.wins|length > 0 else '' }}" autocomplete="off" />
+          </label>
+          <label class="field">
+            <span class="num">2</span>
+            <input type="text" name="win" placeholder="Something you’re a little proud of…"
+                   value="{{ saved.wins[1] if saved and saved.wins|length > 1 else '' }}" autocomplete="off" />
+          </label>
+          <label class="field">
+            <span class="num">3</span>
+            <input type="text" name="win" placeholder="A moment that went right…"
+                   value="{{ saved.wins[2] if saved and saved.wins|length > 2 else '' }}" autocomplete="off" />
+          </label>
+        </fieldset>
+
+        <fieldset class="improve">
+          <legend>One thing I can do better tomorrow</legend>
+          <label class="field field-wide">
+            <span class="num heart">♡</span>
+            <input type="text" name="improve" placeholder="Gently, without judgment…"
+                   value="{{ saved.improve if saved else '' }}" autocomplete="off" />
+          </label>
+        </fieldset>
+
+        <input type="hidden" id="date" value="{{ date_str }}" />
+        <button type="submit" class="save-btn">Save my reflection</button>
+        <p class="saved-msg" id="saved-msg">
+          {% if saved %}Saved earlier today — feel free to update it. 🌙{% endif %}
+        </p>
+      </form>
+    </section>
+
+    <footer class="foot">Be proud of how far you've come. 🌸</footer>
+  </main>
+
+  <script>
+    const form = document.getElementById("reflect-form");
+    const msg = document.getElementById("saved-msg");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const wins = [...document.querySelectorAll('input[name="win"]')].map(i => i.value);
+      const improve = document.querySelector('input[name="improve"]').value;
+      const date = document.getElementById("date").value;
+
+      msg.textContent = "Saving…";
+      msg.classList.add("show");
+      try {
+        const res = await fetch("/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ date, wins, improve }),
+        });
+        if (!res.ok) throw new Error();
+        msg.textContent = "Saved. Rest well — you did enough today. 🌙";
+      } catch {
+        msg.textContent = "Hmm, couldn’t save just now. Try once more?";
+      }
+    });
+  </script>
+</body>
+</html>

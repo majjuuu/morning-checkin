@@ -1,0 +1,16 @@
+# --- Personal / secret — NEVER commit these ---
+# config.json contains your private secret iCal URL
+config.json
+# journal/ holds your personal daily reflections
+journal/*.json
+
+# --- Python virtual environment & caches ---
+venv/
+__pycache__/
+*.py[cod]
+
+# --- Logs ---
+*.log
+
+# --- macOS ---
+.DS_Store
