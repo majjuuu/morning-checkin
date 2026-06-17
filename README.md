@@ -97,3 +97,7 @@ OS you can simply run `./venv/bin/python app.py` whenever you want it.
 - Serves on **port 5001** (port 5000 is used by macOS AirPlay Receiver).
 - If the calendar can't be reached, the page still works for reflecting.
 - Built with Flask + `icalendar` + `recurring-ical-events`.
+
+## 📄 License
+
+[MIT](LICENSE) — free to use, change, and share.
