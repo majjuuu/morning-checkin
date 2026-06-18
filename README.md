@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="static/icon-512.png" alt="Morning Check-in logo" width="104" />
+</p>
+
 # 🌿 Morning Check-in
 
 A peaceful, pastel **local web page** to start your day: it shows today's Google

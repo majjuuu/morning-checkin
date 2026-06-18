@@ -64,6 +64,12 @@ body {
 
 /* hero */
 .hero { text-align: center; margin-bottom: 34px; }
+.logo {
+  display: block;
+  margin: 0 auto 16px;
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(215, 106, 137, 0.18);
+}
 .date {
   font-size: 0.82rem;
   letter-spacing: 0.18em;
