@@ -415,6 +415,59 @@ legend {
 .entry-empty a { color: var(--rose-deep); }
 .entry-loading { color: var(--ink-soft); margin: 6px 0; }
 
+/* section-heading accent icons */
+.head-ic { display: block; border-radius: 7px; flex: 0 0 auto; }
+
+/* "what filled your day?" tags */
+.daytags { margin-top: 2px; margin-bottom: 22px; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 66px;
+  padding: 6px 4px 5px;
+  border: none;
+  border-radius: 14px;
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+}
+.tag img {
+  border-radius: 13px;
+  filter: grayscale(0.5) opacity(0.55);
+  transition: filter 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.tag span {
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  transition: color 0.15s;
+}
+.tag:hover img { transform: translateY(-2px); }
+.tag.on img { filter: none; box-shadow: 0 6px 14px rgba(215, 106, 137, 0.28); }
+.tag.on span { color: var(--rose-deep); font-weight: 600; }
+
+/* footer companion */
+.companion {
+  display: block;
+  margin: 0 auto 10px;
+  border-radius: 14px;
+  filter: drop-shadow(0 8px 16px rgba(215, 106, 137, 0.18));
+  animation: bob 4s ease-in-out infinite;
+}
+.foot p { margin: 0; }
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+
+/* calendar: tags shown in a day's entry */
+.entry-tags { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 2px; }
+.entry-tag { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 52px; }
+.entry-tag img { border-radius: 11px; }
+.entry-tag span { font-size: 0.7rem; color: var(--ink-soft); text-align: center; }
+
 @media (max-width: 480px) {
   .greeting { font-size: 1.7rem; }
   .page { padding: 40px 16px 48px; }

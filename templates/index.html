@@ -41,7 +41,7 @@
     </header>
 
     <section class="card schedule">
-      <h2><span class="dot"></span>Today's gentle plan</h2>
+      <h2><img class="head-ic" src="{{ url_for('static', filename='icon.svg') }}" alt="" width="24" height="24" />Today's gentle plan</h2>
 
       {% if calendar_error == 'no-url' %}
         <p class="hint">
@@ -71,7 +71,7 @@
     </section>
 
     <section class="card reflect">
-      <h2><span class="dot dot-pink"></span>Evening reflection</h2>
+      <h2><img class="head-ic" src="{{ url_for('static', filename='icons/journaling.svg') }}" alt="" width="24" height="24" />Evening reflection</h2>
       <p class="reflect-intro">When your day winds down, come back and notice the good.</p>
 
       <form id="reflect-form">
@@ -103,6 +103,19 @@
           </label>
         </fieldset>
 
+        <fieldset class="daytags">
+          <legend>What filled your day?</legend>
+          <div class="tag-row">
+            {% for a in activities %}
+            <button type="button" class="tag {% if a.id in saved_tags %}on{% endif %}"
+                    data-tag="{{ a.id }}" aria-pressed="{{ 'true' if a.id in saved_tags else 'false' }}">
+              <img src="{{ url_for('static', filename='icons/' + a.id + '.svg') }}" alt="" width="42" height="42" />
+              <span>{{ a.label }}</span>
+            </button>
+            {% endfor %}
+          </div>
+        </fieldset>
+
         <input type="hidden" id="date" value="{{ date_str }}" />
         <button type="submit" class="save-btn">Save my reflection</button>
         <p class="saved-msg" id="saved-msg">
@@ -111,18 +124,30 @@
       </form>
     </section>
 
-    <footer class="foot">Be proud of how far you've come. 🌸</footer>
+    <footer class="foot">
+      <img class="companion" src="{{ url_for('static', filename='icons/' + companion + '.svg') }}" alt="" width="48" height="48" />
+      <p>Be proud of how far you've come. 🌸</p>
+    </footer>
   </main>
 
   <script>
     const form = document.getElementById("reflect-form");
     const msg = document.getElementById("saved-msg");
 
+    // Toggle "what filled your day?" tags.
+    document.querySelectorAll(".tag").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const on = btn.classList.toggle("on");
+        btn.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+    });
+
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const wins = [...document.querySelectorAll('input[name="win"]')].map(i => i.value);
       const improve = document.querySelector('input[name="improve"]').value;
       const date = document.getElementById("date").value;
+      const tags = [...document.querySelectorAll(".tag.on")].map(b => b.dataset.tag);
 
       msg.textContent = "Saving…";
       msg.classList.add("show");
@@ -130,7 +155,7 @@
         const res = await fetch("/save", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ date, wins, improve }),
+          body: JSON.stringify({ date, wins, improve, tags }),
         });
         if (!res.ok) throw new Error();
         msg.textContent = "Saved. Rest well — you did enough today. 🌙";

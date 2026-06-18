@@ -74,6 +74,25 @@ NOTES_FULL = [
 ]
 
 
+# "What filled your day?" tags shown in the reflection. id == icon filename stem.
+ACTIVITIES = [
+    {"id": "capybara", "label": "Cozy"},
+    {"id": "basketball", "label": "Basketball"},
+    {"id": "cooking", "label": "Cooking"},
+    {"id": "shopping", "label": "Shopping"},
+    {"id": "makeup", "label": "Makeup"},
+    {"id": "journaling", "label": "Journaling"},
+]
+ACTIVITY_IDS = {a["id"] for a in ACTIVITIES}
+
+# A little companion that greets you each day — capybara shows up most often.
+COMPANIONS = [
+    "capybara", "basketball", "capybara", "cooking",
+    "capybara", "shopping", "capybara", "makeup",
+    "capybara", "journaling",
+]
+
+
 def load_config():
     with open(CONFIG_PATH, "r", encoding="utf-8") as fh:
         return json.load(fh)
@@ -198,6 +217,9 @@ def index():
         date_str=date_str,
         display_name=(cfg.get("display_name") or "").strip(),
         saved=saved,
+        activities=ACTIVITIES,
+        saved_tags=(saved.get("tags", []) if saved else []),
+        companion=pick_for_day(COMPANIONS, today),
     )
 
 
@@ -207,11 +229,15 @@ def save():
     date_str = data.get("date") or dt.date.today().isoformat()
     wins = [str(w).strip() for w in data.get("wins", [])]
     improve = str(data.get("improve", "")).strip()
+    # Keep only known activity tags, in their canonical order.
+    chosen = set(data.get("tags", []) or [])
+    tags = [a["id"] for a in ACTIVITIES if a["id"] in chosen]
 
     entry = {
         "date": date_str,
         "wins": wins,
         "improve": improve,
+        "tags": tags,
         "saved_at": dt.datetime.now().isoformat(timespec="seconds"),
     }
     journal_path(date_str).write_text(
@@ -238,6 +264,8 @@ def calendar_view():
         "calendar.html",
         today_str=now.date().isoformat(),
         display_name=(cfg.get("display_name") or "").strip(),
+        activities=ACTIVITIES,
+        companion=pick_for_day(COMPANIONS, now.date()),
     )
 
 

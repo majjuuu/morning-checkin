@@ -51,11 +51,15 @@
       <div id="entry-body"></div>
     </section>
 
-    <footer class="foot">Every day you showed up is worth remembering. 🌸</footer>
+    <footer class="foot">
+      <img class="companion" src="{{ url_for('static', filename='icons/' + companion + '.svg') }}" alt="" width="48" height="48" />
+      <p>Every day you showed up is worth remembering. 🌸</p>
+    </footer>
   </main>
 
   <script>
     const TODAY = "{{ today_str }}";
+    const ACTIVITIES = {{ activities | tojson }};
     const MONTHS = ["January","February","March","April","May","June","July",
                     "August","September","October","November","December"];
 
@@ -130,11 +134,19 @@
         const improveHtml = (data.improve && data.improve.trim())
           ? `<p class="entry-improve">${escapeHtml(data.improve)}</p>`
           : `<p class="entry-empty">Nothing noted.</p>`;
+        const tags = (data.tags || []);
+        const tagHtml = tags.length
+          ? `<div class="entry-tags">${tags.map(t => {
+                const a = ACTIVITIES.find(x => x.id === t);
+                return `<span class="entry-tag"><img src="/static/icons/${t}.svg" alt="" width="34" height="34"/><span>${a ? a.label : t}</span></span>`;
+              }).join("")}</div>`
+          : "";
         body.innerHTML = `
           <h3 class="entry-h">Three things you did well</h3>
           ${winsHtml}
           <h3 class="entry-h">One thing to do better</h3>
           ${improveHtml}
+          ${tagHtml ? `<h3 class="entry-h">What filled the day</h3>${tagHtml}` : ""}
         `;
       } catch {
         body.innerHTML = `<p class="entry-empty">Couldn't load this entry.</p>`;

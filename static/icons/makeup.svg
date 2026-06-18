@@ -1,0 +1,8 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Makeup">
+  <defs><linearGradient id="mubg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fdecf2"/><stop offset="1" stop-color="#ffe0ec"/></linearGradient></defs>
+  <rect width="64" height="64" rx="16" fill="url(#mubg)"/>
+  <rect x="26" y="34" width="12" height="18" rx="2.5" fill="#e7c9a0"/>
+  <rect x="24.5" y="30" width="15" height="6" rx="2" fill="#d8b486"/>
+  <path d="M27 30 v-9 a5 5 0 0 1 10 0 v9 z" fill="#ef7fa6"/>
+  <path d="M27 21 a5 5 0 0 1 10 0 z" fill="#f59ab8"/>
+</svg>

@@ -1,0 +1,17 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Capybara">
+  <defs><linearGradient id="cbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef7ef"/><stop offset="1" stop-color="#ffeede"/></linearGradient></defs>
+  <rect width="64" height="64" rx="16" fill="url(#cbg)"/>
+  <ellipse cx="32" cy="45" rx="18" ry="12" fill="#cdb094"/>
+  <ellipse cx="21" cy="20" rx="4" ry="4.5" fill="#bda07f"/>
+  <ellipse cx="43" cy="20" rx="4" ry="4.5" fill="#bda07f"/>
+  <circle cx="32" cy="30" r="14" fill="#cdb094"/>
+  <ellipse cx="32" cy="36" rx="7.5" ry="5.5" fill="#bb9876"/>
+  <circle cx="25" cy="28" r="1.9" fill="#5b4636"/>
+  <circle cx="39" cy="28" r="1.9" fill="#5b4636"/>
+  <circle cx="29.5" cy="36" r="1" fill="#6b5036"/>
+  <circle cx="34.5" cy="36" r="1" fill="#6b5036"/>
+  <circle cx="22" cy="33" r="2.4" fill="#f6b0c4" opacity="0.55"/>
+  <circle cx="42" cy="33" r="2.4" fill="#f6b0c4" opacity="0.55"/>
+  <circle cx="32" cy="15" r="3.4" fill="#ffb27a"/>
+  <path d="M33 11.5 q2 -2 4 -1 q-1 2 -3.4 2.2 z" fill="#9bd2a0"/>
+</svg>
