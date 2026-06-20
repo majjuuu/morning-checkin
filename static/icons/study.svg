@@ -1,0 +1,10 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Study">
+  <defs><linearGradient id="stbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eafaf0"/><stop offset="1" stop-color="#ffe7ef"/></linearGradient></defs>
+  <rect width="64" height="64" rx="16" fill="url(#stbg)"/>
+  <rect x="16" y="38" width="34" height="7" rx="2.5" fill="#c5b3e6"/>
+  <rect x="20" y="40" width="3" height="3" rx="1" fill="#a991d4"/>
+  <rect x="14" y="30" width="32" height="7" rx="2.5" fill="#a9c4ea"/>
+  <rect x="18" y="32" width="3" height="3" rx="1" fill="#85a8d6"/>
+  <rect x="18" y="22" width="32" height="7" rx="2.5" fill="#f7a8c4"/>
+  <rect x="22" y="24" width="3" height="3" rx="1" fill="#e98bab"/>
+</svg>

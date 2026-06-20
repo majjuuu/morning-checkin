@@ -82,6 +82,8 @@ ACTIVITIES = [
     {"id": "shopping", "label": "Shopping"},
     {"id": "makeup", "label": "Makeup"},
     {"id": "journaling", "label": "Journaling"},
+    {"id": "gym", "label": "Gym"},
+    {"id": "study", "label": "Study"},
 ]
 ACTIVITY_IDS = {a["id"] for a in ACTIVITIES}
 
@@ -179,6 +181,32 @@ def journal_path(date_str):
     return JOURNAL_DIR / f"{date_str}.json"
 
 
+def load_notes(date_str):
+    """Return a day's notes as a list (newest saves appended last).
+
+    Handles both the current format {"date", "notes": [...]} and the older
+    flat format {"date", "wins", "improve", "tags"} (treated as one note).
+    """
+    jp = journal_path(date_str)
+    if not jp.exists():
+        return []
+    try:
+        data = json.loads(jp.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+    if isinstance(data, dict) and isinstance(data.get("notes"), list):
+        return data["notes"]
+    if isinstance(data, dict) and any(k in data for k in ("wins", "improve", "tags", "diary")):
+        return [{
+            "wins": data.get("wins", []),
+            "improve": data.get("improve", ""),
+            "tags": data.get("tags", []),
+            "diary": data.get("diary", ""),
+            "saved_at": data.get("saved_at", ""),
+        }]
+    return []
+
+
 @app.route("/")
 def index():
     cfg = load_config()
@@ -198,14 +226,9 @@ def index():
 
     note = note_for_day(events, today) if not calendar_error else pick_for_day(NOTES_BALANCED, today, salt=1)
 
-    # Load any reflection already saved for today.
-    saved = None
-    jp = journal_path(date_str)
-    if jp.exists():
-        try:
-            saved = json.loads(jp.read_text(encoding="utf-8"))
-        except Exception:
-            saved = None
+    # The form always starts blank — each save is a fresh note. We just count
+    # how many notes today already has, to gently acknowledge them.
+    today_count = len(load_notes(date_str))
 
     return render_template(
         "index.html",
@@ -216,9 +239,8 @@ def index():
         date_pretty=now.strftime("%A, %B %-d"),
         date_str=date_str,
         display_name=(cfg.get("display_name") or "").strip(),
-        saved=saved,
         activities=ACTIVITIES,
-        saved_tags=(saved.get("tags", []) if saved else []),
+        today_count=today_count,
         companion=pick_for_day(COMPANIONS, today),
     )
 
@@ -226,24 +248,33 @@ def index():
 @app.route("/save", methods=["POST"])
 def save():
     data = request.get_json(force=True) or {}
-    date_str = data.get("date") or dt.date.today().isoformat()
+    date_str = _valid_date(data.get("date")) or dt.date.today().isoformat()
     wins = [str(w).strip() for w in data.get("wins", [])]
     improve = str(data.get("improve", "")).strip()
     # Keep only known activity tags, in their canonical order.
     chosen = set(data.get("tags", []) or [])
     tags = [a["id"] for a in ACTIVITIES if a["id"] in chosen]
+    diary = str(data.get("diary", "")).strip()
 
-    entry = {
-        "date": date_str,
+    # Don't store a completely empty note.
+    if not any(wins) and not improve and not tags and not diary:
+        return jsonify({"ok": False, "empty": True}), 400
+
+    note = {
         "wins": wins,
         "improve": improve,
         "tags": tags,
+        "diary": diary,
         "saved_at": dt.datetime.now().isoformat(timespec="seconds"),
     }
+    # Append to the day's notes — never overwrite earlier saves.
+    notes = load_notes(date_str)
+    notes.append(note)
     journal_path(date_str).write_text(
-        json.dumps(entry, ensure_ascii=False, indent=2), encoding="utf-8"
+        json.dumps({"date": date_str, "notes": notes}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
     )
-    return jsonify({"ok": True})
+    return jsonify({"ok": True, "count": len(notes)})
 
 
 def _valid_date(date_str):
@@ -274,15 +305,8 @@ def api_entry(date_str):
     date_str = _valid_date(date_str)
     if not date_str:
         return jsonify({"error": "bad-date"}), 400
-    jp = journal_path(date_str)
-    if not jp.exists():
-        return jsonify({"date": date_str, "exists": False})
-    try:
-        entry = json.loads(jp.read_text(encoding="utf-8"))
-        entry["exists"] = True
-        return jsonify(entry)
-    except Exception:
-        return jsonify({"date": date_str, "exists": False})
+    notes = load_notes(date_str)
+    return jsonify({"date": date_str, "exists": bool(notes), "notes": notes})
 
 
 @app.route("/api/entry-dates")

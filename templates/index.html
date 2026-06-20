@@ -79,18 +79,15 @@
           <legend>Three things I did well today</legend>
           <label class="field">
             <span class="num">1</span>
-            <input type="text" name="win" placeholder="A small win counts…"
-                   value="{{ saved.wins[0] if saved and saved.wins|length > 0 else '' }}" autocomplete="off" />
+            <input type="text" name="win" placeholder="A small win counts…" autocomplete="off" />
           </label>
           <label class="field">
             <span class="num">2</span>
-            <input type="text" name="win" placeholder="Something you’re a little proud of…"
-                   value="{{ saved.wins[1] if saved and saved.wins|length > 1 else '' }}" autocomplete="off" />
+            <input type="text" name="win" placeholder="Something you’re a little proud of…" autocomplete="off" />
           </label>
           <label class="field">
             <span class="num">3</span>
-            <input type="text" name="win" placeholder="A moment that went right…"
-                   value="{{ saved.wins[2] if saved and saved.wins|length > 2 else '' }}" autocomplete="off" />
+            <input type="text" name="win" placeholder="A moment that went right…" autocomplete="off" />
           </label>
         </fieldset>
 
@@ -98,8 +95,7 @@
           <legend>One thing I can do better tomorrow</legend>
           <label class="field field-wide">
             <span class="num heart">♡</span>
-            <input type="text" name="improve" placeholder="Gently, without judgment…"
-                   value="{{ saved.improve if saved else '' }}" autocomplete="off" />
+            <input type="text" name="improve" placeholder="Gently, without judgment…" autocomplete="off" />
           </label>
         </fieldset>
 
@@ -107,8 +103,7 @@
           <legend>What filled your day?</legend>
           <div class="tag-row">
             {% for a in activities %}
-            <button type="button" class="tag {% if a.id in saved_tags %}on{% endif %}"
-                    data-tag="{{ a.id }}" aria-pressed="{{ 'true' if a.id in saved_tags else 'false' }}">
+            <button type="button" class="tag" data-tag="{{ a.id }}" aria-pressed="false">
               <img src="{{ url_for('static', filename='icons/' + a.id + '.svg') }}" alt="" width="42" height="42" />
               <span>{{ a.label }}</span>
             </button>
@@ -116,10 +111,17 @@
           </div>
         </fieldset>
 
+        <fieldset class="diary">
+          <legend>Anything else on your mind?</legend>
+          <textarea name="diary" class="diary-box" rows="4"
+                    placeholder="Write freely — whatever you'd like to remember about today…"></textarea>
+        </fieldset>
+
         <input type="hidden" id="date" value="{{ date_str }}" />
         <button type="submit" class="save-btn">Save my reflection</button>
         <p class="saved-msg" id="saved-msg">
-          {% if saved %}Saved earlier today — feel free to update it. 🌙{% endif %}
+          {% if today_count == 1 %}You've written 1 note today — find it in your calendar. 🌙
+          {% elif today_count > 1 %}You've written {{ today_count }} notes today — they're all in your calendar. 🌙{% endif %}
         </p>
       </form>
     </section>
@@ -144,10 +146,18 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const wins = [...document.querySelectorAll('input[name="win"]')].map(i => i.value);
-      const improve = document.querySelector('input[name="improve"]').value;
+      const winInputs = [...document.querySelectorAll('input[name="win"]')];
+      const improveInput = document.querySelector('input[name="improve"]');
+      const diaryInput = document.querySelector('textarea[name="diary"]');
       const date = document.getElementById("date").value;
-      const tags = [...document.querySelectorAll(".tag.on")].map(b => b.dataset.tag);
+
+      const payload = {
+        date,
+        wins: winInputs.map(i => i.value),
+        improve: improveInput.value,
+        diary: diaryInput.value,
+        tags: [...document.querySelectorAll(".tag.on")].map(b => b.dataset.tag),
+      };
 
       msg.textContent = "Saving…";
       msg.classList.add("show");
@@ -155,10 +165,27 @@
         const res = await fetch("/save", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ date, wins, improve, tags }),
+          body: JSON.stringify(payload),
         });
-        if (!res.ok) throw new Error();
-        msg.textContent = "Saved. Rest well — you did enough today. 🌙";
+        const out = await res.json().catch(() => ({}));
+        if (res.ok && out.ok) {
+          // Clear everything for a fresh note — each save is its own entry.
+          winInputs.forEach(i => (i.value = ""));
+          improveInput.value = "";
+          diaryInput.value = "";
+          document.querySelectorAll(".tag.on").forEach(b => {
+            b.classList.remove("on");
+            b.setAttribute("aria-pressed", "false");
+          });
+          const n = out.count || 1;
+          msg.textContent = n > 1
+            ? `Saved 🌙 That's ${n} notes today — all kept in your calendar.`
+            : "Saved 🌙 It's safe in your calendar — write more anytime.";
+        } else if (out.empty) {
+          msg.textContent = "Write a little something first 🌷";
+        } else {
+          throw new Error();
+        }
       } catch {
         msg.textContent = "Hmm, couldn’t save just now. Try once more?";
       }
