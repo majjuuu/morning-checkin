@@ -3,6 +3,8 @@
 config.json
 # journal/ holds your personal daily reflections
 journal/*.json
+# weekly.json holds your personal weekly focus/goal
+weekly.json
 
 # --- Python virtual environment & caches ---
 venv/

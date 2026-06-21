@@ -176,6 +176,114 @@ body {
   color: var(--rose-deep);
 }
 
+/* this week's focus + goal */
+.hidden { display: none !important; }
+.week-item { margin-bottom: 14px; }
+.week-label {
+  display: inline-block;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--rose-deep);
+  margin-bottom: 4px;
+}
+.week-text { margin: 0; font-size: 1.05rem; line-height: 1.5; color: var(--ink); }
+.week-text:empty::before { content: "—"; color: var(--ink-soft); }
+.week-meta { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+.week-edit {
+  border: none;
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--rose-deep);
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+.week-edit:hover { background: #fff; transform: translateY(-1px); }
+.week-set { color: var(--ink-soft); font-size: 0.8rem; margin-left: auto; }
+
+.week-flabel {
+  display: block;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+.week-flabel input {
+  display: block;
+  width: 100%;
+  margin-top: 7px;
+  border: 1px solid rgba(180, 160, 200, 0.3);
+  background: rgba(255, 255, 255, 0.72);
+  border-radius: 14px;
+  padding: 12px 15px;
+  font-family: inherit;
+  font-size: 0.98rem;
+  font-weight: 400;
+  color: var(--ink);
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+.week-flabel input::placeholder { color: #b6acc0; }
+.week-flabel input:focus {
+  outline: none;
+  border-color: var(--rose);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(232, 132, 159, 0.14);
+}
+.week-actions { display: flex; align-items: center; gap: 10px; }
+.week-save { width: auto; flex: 1; }
+.week-cancel {
+  border: none;
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 10px 8px;
+}
+.week-cancel:hover { color: var(--rose-deep); }
+.week-msg { text-align: center; min-height: 1em; margin: 10px 0 0; font-size: 0.86rem; color: var(--rose-deep); }
+
+.week-history-toggle {
+  display: block;
+  margin: 14px auto 0;
+  border: none;
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.week-history-toggle:hover { color: var(--rose-deep); }
+.week-history {
+  margin-top: 12px;
+  border-top: 1px dashed rgba(180, 160, 200, 0.3);
+  padding-top: 12px;
+}
+.week-hist-item { margin-bottom: 14px; }
+.week-hist-item:last-child { margin-bottom: 0; }
+.week-hist-date {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--rose-deep);
+}
+.week-hist-line { margin: 4px 0 0; font-size: 0.92rem; line-height: 1.45; color: var(--ink); }
+.week-hist-line b {
+  color: var(--ink-soft);
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-right: 6px;
+}
+.week-hist-empty { color: var(--ink-soft); font-style: italic; font-size: 0.9rem; margin: 4px 0; }
+
 /* reflection */
 .reflect-intro {
   margin: -6px 0 18px;

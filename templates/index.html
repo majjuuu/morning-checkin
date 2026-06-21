@@ -40,6 +40,44 @@
       <p class="subgreeting">{{ greeting }}</p>
     </header>
 
+    <section class="card week">
+      <h2><img class="head-ic" src="{{ url_for('static', filename='icons/focus.svg') }}" alt="" width="24" height="24" />This week</h2>
+
+      <div id="week-view" class="week-view{% if not weekly %} hidden{% endif %}">
+        <div class="week-item">
+          <span class="week-label">✦ Focus</span>
+          <p class="week-text" id="view-focus">{{ weekly.focus if weekly else '' }}</p>
+        </div>
+        <div class="week-item">
+          <span class="week-label">⚑ Goal</span>
+          <p class="week-text" id="view-goal">{{ weekly.goal if weekly else '' }}</p>
+        </div>
+        <div class="week-meta">
+          <button type="button" class="week-edit" id="week-edit-btn">✎ Update</button>
+          <small class="week-set" id="week-set">{% if weekly_set_pretty %}Set {{ weekly_set_pretty }}{% endif %}</small>
+        </div>
+      </div>
+
+      <form id="week-form" class="week-form{% if weekly %} hidden{% endif %}">
+        <label class="week-flabel">This week's focus
+          <input type="text" name="focus" placeholder="A word or theme to steer by…"
+                 value="{{ weekly.focus if weekly else '' }}" autocomplete="off" />
+        </label>
+        <label class="week-flabel">This week's goal
+          <input type="text" name="goal" placeholder="One concrete thing to aim for…"
+                 value="{{ weekly.goal if weekly else '' }}" autocomplete="off" />
+        </label>
+        <div class="week-actions">
+          <button type="submit" class="save-btn week-save">Save this week</button>
+          <button type="button" class="week-cancel hidden" id="week-cancel">Cancel</button>
+        </div>
+        <p class="week-msg" id="week-msg"></p>
+      </form>
+
+      <button type="button" class="week-history-toggle" id="week-history-toggle">Past weeks ⌄</button>
+      <div id="week-history" class="week-history hidden"></div>
+    </section>
+
     <section class="card schedule">
       <h2><img class="head-ic" src="{{ url_for('static', filename='icon.svg') }}" alt="" width="24" height="24" />Today's gentle plan</h2>
 
@@ -190,6 +228,98 @@
         msg.textContent = "Hmm, couldn’t save just now. Try once more?";
       }
     });
+
+    // ---- This week's focus / goal ----
+    const weekView = document.getElementById("week-view");
+    const weekForm = document.getElementById("week-form");
+    const weekEditBtn = document.getElementById("week-edit-btn");
+    const weekCancel = document.getElementById("week-cancel");
+    const weekMsg = document.getElementById("week-msg");
+    const weekSet = document.getElementById("week-set");
+
+    function shortDate(iso) {
+      const d = new Date(iso);
+      if (isNaN(d)) return "";
+      return d.toLocaleDateString([], { month: "short", day: "numeric" });
+    }
+
+    function openWeekEditor() {
+      weekView.classList.add("hidden");
+      weekForm.classList.remove("hidden");
+      // Cancel only makes sense if there's already a saved focus to go back to.
+      weekCancel.classList.toggle("hidden", weekView.querySelector("#view-focus").textContent.trim() === ""
+        && weekView.querySelector("#view-goal").textContent.trim() === "");
+    }
+    function closeWeekEditor() {
+      weekForm.classList.add("hidden");
+      weekView.classList.remove("hidden");
+      weekMsg.textContent = "";
+    }
+
+    weekEditBtn.addEventListener("click", openWeekEditor);
+    weekCancel.addEventListener("click", closeWeekEditor);
+
+    weekForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const focus = weekForm.querySelector('input[name="focus"]').value;
+      const goal = weekForm.querySelector('input[name="goal"]').value;
+      weekMsg.textContent = "Saving…";
+      try {
+        const res = await fetch("/weekly/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ focus, goal }),
+        });
+        const out = await res.json().catch(() => ({}));
+        if (res.ok && out.ok) {
+          document.getElementById("view-focus").textContent = out.focus;
+          document.getElementById("view-goal").textContent = out.goal;
+          weekSet.textContent = out.set_at ? "Set " + shortDate(out.set_at) : "";
+          closeWeekEditor();
+          historyLoaded = false; // refresh next time it's opened
+        } else if (out.empty) {
+          weekMsg.textContent = "Add a focus or a goal first 🌱";
+        } else {
+          throw new Error();
+        }
+      } catch {
+        weekMsg.textContent = "Couldn’t save just now — try again?";
+      }
+    });
+
+    // Past weeks history (lazy-loaded on first open).
+    const histToggle = document.getElementById("week-history-toggle");
+    const histBox = document.getElementById("week-history");
+    let historyLoaded = false;
+
+    histToggle.addEventListener("click", async () => {
+      const hidden = histBox.classList.toggle("hidden");
+      histToggle.textContent = hidden ? "Past weeks ⌄" : "Past weeks ⌃";
+      if (hidden) return;
+      if (!historyLoaded) {
+        histBox.innerHTML = `<p class="week-hist-empty">Loading…</p>`;
+        try {
+          const all = await (await fetch("/api/weekly-history")).json();
+          if (!all.length) {
+            histBox.innerHTML = `<p class="week-hist-empty">No past weeks yet — your first focus starts the history. 🌱</p>`;
+          } else {
+            histBox.innerHTML = all.map((w, i) => `
+              <div class="week-hist-item">
+                <span class="week-hist-date">${w.set_at ? shortDate(w.set_at) : ""}${i === 0 ? " · now" : ""}</span>
+                ${w.focus ? `<p class="week-hist-line"><b>Focus</b> ${escapeWeek(w.focus)}</p>` : ""}
+                ${w.goal ? `<p class="week-hist-line"><b>Goal</b> ${escapeWeek(w.goal)}</p>` : ""}
+              </div>`).join("");
+          }
+          historyLoaded = true;
+        } catch {
+          histBox.innerHTML = `<p class="week-hist-empty">Couldn’t load history.</p>`;
+        }
+      }
+    });
+
+    function escapeWeek(s) {
+      return s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
   </script>
 </body>
 </html>

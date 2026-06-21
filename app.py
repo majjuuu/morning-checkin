@@ -19,6 +19,7 @@ BASE_DIR = Path(__file__).resolve().parent
 CONFIG_PATH = BASE_DIR / "config.json"
 JOURNAL_DIR = BASE_DIR / "journal"
 JOURNAL_DIR.mkdir(exist_ok=True)
+WEEKLY_PATH = BASE_DIR / "weekly.json"
 
 app = Flask(__name__)
 
@@ -181,6 +182,19 @@ def journal_path(date_str):
     return JOURNAL_DIR / f"{date_str}.json"
 
 
+def load_weekly():
+    """Return all weekly focus/goal entries (oldest first; current is last)."""
+    if not WEEKLY_PATH.exists():
+        return []
+    try:
+        data = json.loads(WEEKLY_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+    if isinstance(data, dict) and isinstance(data.get("entries"), list):
+        return data["entries"]
+    return []
+
+
 def load_notes(date_str):
     """Return a day's notes as a list (newest saves appended last).
 
@@ -230,6 +244,16 @@ def index():
     # how many notes today already has, to gently acknowledge them.
     today_count = len(load_notes(date_str))
 
+    # Current weekly focus/goal (the most recent one written).
+    weekly_entries = load_weekly()
+    weekly = weekly_entries[-1] if weekly_entries else None
+    weekly_set_pretty = ""
+    if weekly and weekly.get("set_at"):
+        try:
+            weekly_set_pretty = dt.datetime.fromisoformat(weekly["set_at"]).strftime("%b %-d")
+        except (ValueError, TypeError):
+            weekly_set_pretty = ""
+
     return render_template(
         "index.html",
         greeting=pick_for_day(GREETINGS, today),
@@ -242,6 +266,8 @@ def index():
         activities=ACTIVITIES,
         today_count=today_count,
         companion=pick_for_day(COMPANIONS, today),
+        weekly=weekly,
+        weekly_set_pretty=weekly_set_pretty,
     )
 
 
@@ -275,6 +301,32 @@ def save():
         encoding="utf-8",
     )
     return jsonify({"ok": True, "count": len(notes)})
+
+
+@app.route("/weekly/save", methods=["POST"])
+def weekly_save():
+    data = request.get_json(force=True) or {}
+    focus = str(data.get("focus", "")).strip()
+    goal = str(data.get("goal", "")).strip()
+    if not focus and not goal:
+        return jsonify({"ok": False, "empty": True}), 400
+
+    entries = load_weekly()
+    entry = {
+        "focus": focus,
+        "goal": goal,
+        "set_at": dt.datetime.now().isoformat(timespec="seconds"),
+    }
+    entries.append(entry)
+    WEEKLY_PATH.write_text(
+        json.dumps({"entries": entries}, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    return jsonify({"ok": True, **entry})
+
+
+@app.route("/api/weekly-history")
+def weekly_history():
+    return jsonify(list(reversed(load_weekly())))  # newest first
 
 
 def _valid_date(date_str):
