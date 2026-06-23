@@ -1,5 +1,9 @@
 
 
+<p align="center">
+  <img src="static/icon-512.png" alt="Morning Check-in logo" width="104" />
+</p>
+
 # 🌿 Morning Check-in
 
 A peaceful, pastel **local web page** to start your day: it shows today's Google
@@ -12,6 +16,10 @@ privately through its **"secret iCal address"** — there's no OAuth and no Goog
 Cloud project, and nothing leaves your machine except a read-only fetch of your
 own calendar feed.
 
+<p align="center">
+  <img src="docs/screenshot.png" alt="Morning Check-in — home dashboard" width="680" />
+</p>
+
 
 ## ✨ Features
 
@@ -23,6 +31,10 @@ own calendar feed.
 - Evening reflection (3 wins + 1 improvement + a free-write diary), saved per day,
   with cute day-tags for what filled your day
 - A calendar page to revisit past reflections — opens on today by default
+
+<p align="center">
+  <img src="docs/calendar.png" alt="Calendar view of past reflections" width="520" />
+</p>
 
 
 ## ✅ Requirements
