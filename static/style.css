@@ -62,18 +62,19 @@ body {
   padding: 56px 22px 64px;
 }
 
-/* two-column masonry for the cards (hero + footer stay full width) */
+/* sidebar layout: short cards stack on the left, reflection gets a wide right */
 .grid {
-  column-count: 2;
-  column-gap: 22px;
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 22px;
+  align-items: start;
 }
-.grid > .card {
-  break-inside: avoid;
-  -webkit-column-break-inside: avoid;
-}
+.side > .card:last-child { margin-bottom: 0; }
+.grid > .reflect { margin-bottom: 0; }
 @media (max-width: 760px) {
   .page { max-width: 620px; }
-  .grid { column-count: 1; }
+  .grid { grid-template-columns: 1fr; }
+  .side > .card:last-child { margin-bottom: 22px; }
 }
 
 /* hero */
