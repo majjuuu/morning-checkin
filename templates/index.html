@@ -40,6 +40,7 @@
       <p class="subgreeting">{{ greeting }}</p>
     </header>
 
+    <div class="grid">
     <section class="card week">
       <h2><img class="head-ic" src="{{ url_for('static', filename='icons/focus.svg') }}" alt="" width="24" height="24" />This week</h2>
 
@@ -178,6 +179,7 @@
         </p>
       </form>
     </section>
+    </div>
 
     <footer class="foot">
       <img class="companion" src="{{ url_for('static', filename='icons/' + companion + '.svg') }}" alt="" width="48" height="48" />
