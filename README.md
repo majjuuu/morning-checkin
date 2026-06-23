@@ -24,9 +24,6 @@ own calendar feed.
   with cute day-tags for what filled your day
 - A calendar page to revisit past reflections — opens on today by default
 
-<p align="center">
-  <img src="docs/calendar.png" alt="Calendar view of past reflections" width="420" />
-</p>
 
 ## ✅ Requirements
 
