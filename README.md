@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="static/icon-512.png" alt="Morning Check-in logo" width="104" />
-</p>
+
 
 # 🌿 Morning Check-in
 
@@ -14,9 +12,6 @@ privately through its **"secret iCal address"** — there's no OAuth and no Goog
 Cloud project, and nothing leaves your machine except a read-only fetch of your
 own calendar feed.
 
-<p align="center">
-  <img src="docs/screenshot.png" alt="Morning Check-in home page" width="420" />
-</p>
 
 ## ✨ Features
 
