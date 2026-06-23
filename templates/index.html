@@ -93,20 +93,6 @@
       {% endif %}
     </section>
 
-    <section class="card emails">
-      <h2><img class="head-ic" src="{{ url_for('static', filename='icons/mail.svg') }}" alt="" width="24" height="24" />Emails to handle</h2>
-      <div id="emails-body">
-        {% if email_configured %}
-        <p class="entry-loading" id="emails-loading">Checking your inboxes…</p>
-        {% else %}
-        <p class="hint">Connect your email to see important messages still waiting on a reply.
-          <br /><span class="hint-sub">One-time Gmail setup: see <code>SETUP_EMAIL.md</code>.</span>
-        </p>
-        {% endif %}
-      </div>
-      <p class="email-summary" id="email-summary"></p>
-    </section>
-
     <section class="card schedule">
       <h2><img class="head-ic" src="{{ url_for('static', filename='icon.svg') }}" alt="" width="24" height="24" />Today's gentle plan</h2>
 
@@ -349,37 +335,6 @@
     function escapeWeek(s) {
       return s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
     }
-
-    // ---- Emails to handle ----
-    (function () {
-      const body = document.getElementById("emails-body");
-      const summaryEl = document.getElementById("email-summary");
-      if (!document.getElementById("emails-loading")) return;  // not configured
-
-      const esc = (s) => (s || "").replace(/[&<>"']/g, c => (
-        { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-
-      fetch("/api/emails").then(r => r.json()).then(data => {
-        if (!data.configured) { body.innerHTML = `<p class="hint">Email isn't connected yet.</p>`; return; }
-        const pending = data.pending || [];
-        if (!pending.length) {
-          body.innerHTML = `<p class="entry-empty">No important emails waiting on a reply — nicely done. 🌿</p>`;
-        } else {
-          body.innerHTML = pending.map(p => `
-            <div class="email-item">
-              <div class="email-main">
-                <p class="email-subject">${p.unread ? '<span class="email-dot"></span>' : ''}${esc(p.subject)}</p>
-                <p class="email-meta">${esc(p.from)} · ${esc(p.account)}</p>
-                <p class="email-snippet">${esc(p.snippet)}</p>
-              </div>
-              <a class="email-reply" href="${esc(p.url)}" target="_blank" rel="noopener">Reply →</a>
-            </div>`).join("");
-        }
-        if (data.summary) { summaryEl.textContent = data.summary; summaryEl.classList.add("show"); }
-      }).catch(() => {
-        body.innerHTML = `<p class="entry-empty">Couldn't reach your inboxes just now.</p>`;
-      });
-    })();
   </script>
 </body>
 </html>

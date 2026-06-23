@@ -5,7 +5,6 @@ Reads today's events from a Google Calendar private iCal feed, offers a warm
 note, and saves your daily reflections (3 wins + 1 thing to improve) to a
 dated file so they build up into a little history over time.
 """
-import os
 import json
 import time
 import datetime as dt
@@ -16,8 +15,6 @@ import requests
 import icalendar
 import recurring_ical_events
 from flask import Flask, render_template, request, jsonify
-
-import email_handler
 
 BASE_DIR = Path(__file__).resolve().parent
 CONFIG_PATH = BASE_DIR / "config.json"
@@ -335,7 +332,6 @@ def index():
         weekly=weekly,
         weekly_set_pretty=weekly_set_pretty,
         weather=fetch_weather(cfg),
-        email_configured=email_handler.is_configured(cfg.get("email_accounts", [])),
     )
 
 
@@ -437,39 +433,6 @@ def api_entry_dates():
         if _valid_date(f.stem):
             dates.append(f.stem)
     return jsonify(sorted(dates))
-
-
-_email_cache = {"ts": 0.0, "data": None}
-
-
-@app.route("/api/emails")
-def api_emails():
-    cfg = load_config()
-    accounts = cfg.get("email_accounts", [])
-    if not email_handler.is_configured(accounts):
-        return jsonify({"configured": False})
-
-    now = time.time()
-    if _email_cache["data"] is not None and now - _email_cache["ts"] < 300:
-        return jsonify(_email_cache["data"])
-
-    pending, not_connected = [], []
-    for acct in accounts:
-        items = email_handler.fetch_pending(acct)
-        if items is None:
-            not_connected.append(acct)
-        else:
-            pending.extend(items)
-    pending.sort(key=lambda p: (not p["unread"],))  # unread first
-
-    api_key = (cfg.get("anthropic_api_key") or os.environ.get("ANTHROPIC_API_KEY") or "").strip()
-    model = cfg.get("summary_model", "claude-opus-4-8")
-    summary = email_handler.summarize(pending, api_key, model) if pending else ""
-
-    data = {"configured": True, "pending": pending, "summary": summary,
-            "count": len(pending), "not_connected": not_connected}
-    _email_cache.update(ts=now, data=data)
-    return jsonify(data)
 
 
 if __name__ == "__main__":

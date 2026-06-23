@@ -5,9 +5,5 @@
 
   "weather_lat": 37.5665,
   "weather_lon": 126.9780,
-  "weather_label": "Seoul",
-
-  "email_accounts": [],
-  "anthropic_api_key": "",
-  "summary_model": "claude-opus-4-8"
+  "weather_label": "Seoul"
 }
