@@ -1,5 +1,13 @@
 {
   "ical_url": "PASTE_YOUR_GOOGLE_CALENDAR_SECRET_ICAL_URL_HERE",
   "display_name": "",
-  "timezone": "America/New_York"
+  "timezone": "America/New_York",
+
+  "weather_lat": 37.5665,
+  "weather_lon": 126.9780,
+  "weather_label": "Seoul",
+
+  "email_accounts": [],
+  "anthropic_api_key": "",
+  "summary_model": "claude-opus-4-8"
 }

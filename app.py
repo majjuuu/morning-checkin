@@ -5,7 +5,9 @@ Reads today's events from a Google Calendar private iCal feed, offers a warm
 note, and saves your daily reflections (3 wins + 1 thing to improve) to a
 dated file so they build up into a little history over time.
 """
+import os
 import json
+import time
 import datetime as dt
 from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -14,6 +16,8 @@ import requests
 import icalendar
 import recurring_ical_events
 from flask import Flask, render_template, request, jsonify
+
+import email_handler
 
 BASE_DIR = Path(__file__).resolve().parent
 CONFIG_PATH = BASE_DIR / "config.json"
@@ -178,6 +182,68 @@ def note_for_day(events, today):
     return pick_for_day(NOTES_FULL, today, salt=1)
 
 
+# --- Weather (Open-Meteo, no API key needed) ---
+# WMO weather code -> (emoji icon, short phrase)
+_WMO = {
+    0: ("☀️", "clear skies"),
+    1: ("🌤️", "mostly clear"),
+    2: ("⛅", "partly cloudy"),
+    3: ("☁️", "overcast"),
+    45: ("🌫️", "foggy"), 48: ("🌫️", "foggy"),
+    51: ("🌦️", "light drizzle"), 53: ("🌦️", "drizzle"), 55: ("🌦️", "heavy drizzle"),
+    56: ("🌧️", "freezing drizzle"), 57: ("🌧️", "freezing drizzle"),
+    61: ("🌧️", "light rain"), 63: ("🌧️", "rain"), 65: ("🌧️", "heavy rain"),
+    66: ("🌧️", "freezing rain"), 67: ("🌧️", "freezing rain"),
+    71: ("🌨️", "light snow"), 73: ("🌨️", "snow"), 75: ("❄️", "heavy snow"), 77: ("🌨️", "snow grains"),
+    80: ("🌦️", "rain showers"), 81: ("🌦️", "rain showers"), 82: ("⛈️", "heavy showers"),
+    85: ("🌨️", "snow showers"), 86: ("🌨️", "snow showers"),
+    95: ("⛈️", "thunderstorms"), 96: ("⛈️", "thunderstorms"), 99: ("⛈️", "thunderstorms"),
+}
+
+_weather_cache = {"ts": 0.0, "data": None}
+
+
+def _weather_line(temp, phrase, label):
+    """A warm one-line description from temp + condition."""
+    if temp <= 2:
+        tip = "bundle up warm"
+    elif temp <= 10:
+        tip = "a jacket would be wise"
+    elif temp <= 18:
+        tip = "maybe a light layer"
+    elif temp <= 27:
+        tip = "lovely and mild"
+    else:
+        tip = "stay cool and hydrated"
+    return f"{phrase.capitalize()} and {temp}° in {label} — {tip}."
+
+
+def fetch_weather(cfg):
+    """Current weather for the configured spot, cached for 15 minutes."""
+    now = time.time()
+    if _weather_cache["data"] is not None and now - _weather_cache["ts"] < 900:
+        return _weather_cache["data"]
+    lat = cfg.get("weather_lat", 37.5665)
+    lon = cfg.get("weather_lon", 126.9780)
+    label = cfg.get("weather_label", "Seoul")
+    try:
+        url = (
+            "https://api.open-meteo.com/v1/forecast"
+            f"?latitude={lat}&longitude={lon}&current=temperature_2m,weather_code,is_day&timezone=auto"
+        )
+        cur = requests.get(url, timeout=8).json()["current"]
+        temp = round(cur["temperature_2m"])
+        icon, phrase = _WMO.get(int(cur["weather_code"]), ("🌡️", "unsettled"))
+        if int(cur["weather_code"]) == 0 and not cur.get("is_day", 1):
+            icon = "🌙"  # clear night
+        data = {"ok": True, "temp": temp, "icon": icon, "label": label,
+                "line": _weather_line(temp, phrase, label)}
+    except Exception:
+        data = {"ok": False}
+    _weather_cache.update(ts=now, data=data)
+    return data
+
+
 def journal_path(date_str):
     return JOURNAL_DIR / f"{date_str}.json"
 
@@ -268,6 +334,8 @@ def index():
         companion=pick_for_day(COMPANIONS, today),
         weekly=weekly,
         weekly_set_pretty=weekly_set_pretty,
+        weather=fetch_weather(cfg),
+        email_configured=email_handler.is_configured(cfg.get("email_accounts", [])),
     )
 
 
@@ -369,6 +437,39 @@ def api_entry_dates():
         if _valid_date(f.stem):
             dates.append(f.stem)
     return jsonify(sorted(dates))
+
+
+_email_cache = {"ts": 0.0, "data": None}
+
+
+@app.route("/api/emails")
+def api_emails():
+    cfg = load_config()
+    accounts = cfg.get("email_accounts", [])
+    if not email_handler.is_configured(accounts):
+        return jsonify({"configured": False})
+
+    now = time.time()
+    if _email_cache["data"] is not None and now - _email_cache["ts"] < 300:
+        return jsonify(_email_cache["data"])
+
+    pending, not_connected = [], []
+    for acct in accounts:
+        items = email_handler.fetch_pending(acct)
+        if items is None:
+            not_connected.append(acct)
+        else:
+            pending.extend(items)
+    pending.sort(key=lambda p: (not p["unread"],))  # unread first
+
+    api_key = (cfg.get("anthropic_api_key") or os.environ.get("ANTHROPIC_API_KEY") or "").strip()
+    model = cfg.get("summary_model", "claude-opus-4-8")
+    summary = email_handler.summarize(pending, api_key, model) if pending else ""
+
+    data = {"configured": True, "pending": pending, "summary": summary,
+            "count": len(pending), "not_connected": not_connected}
+    _email_cache.update(ts=now, data=data)
+    return jsonify(data)
 
 
 if __name__ == "__main__":

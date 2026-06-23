@@ -20,9 +20,16 @@ own calendar feed.
 
 ## ✨ Features
 
+- A warm **"Good morning, &lt;name&gt;"** header
+- **This week's focus & goal**, pinned at the top with a little history
+- **Weather** for your location (no API key — via Open-Meteo) with a one-line read
+- **Emails to handle** — important, unanswered Gmail threads with a one-click
+  **Reply** and a short Claude-written summary *(optional; see
+  [SETUP_EMAIL.md](SETUP_EMAIL.md))*
 - Today's Google Calendar events, in your timezone (recurring events handled)
 - A gentle greeting + schedule note that **changes once per day**
-- Evening reflection form (3 wins + 1 improvement), saved per day
+- Evening reflection (3 wins + 1 improvement + a free-write diary), saved per day,
+  with cute day-tags for what filled your day
 - A calendar page to revisit past reflections — opens on today by default
 
 <p align="center">

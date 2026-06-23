@@ -5,6 +5,9 @@ config.json
 journal/*.json
 # weekly.json holds your personal weekly focus/goal
 weekly.json
+# Gmail OAuth client secret + per-account tokens — NEVER commit
+credentials.json
+token_*.json
 
 # --- Python virtual environment & caches ---
 venv/
