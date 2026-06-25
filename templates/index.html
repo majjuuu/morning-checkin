@@ -135,15 +135,18 @@
           <legend>Three things I did well today</legend>
           <label class="field">
             <span class="num">1</span>
-            <input type="text" name="win" placeholder="A small win counts…" autocomplete="off" />
+            <input type="text" name="win" placeholder="A small win counts…" autocomplete="off"
+                   value="{{ saved.wins[0] if saved and saved.wins|length > 0 else '' }}" />
           </label>
           <label class="field">
             <span class="num">2</span>
-            <input type="text" name="win" placeholder="Something you’re a little proud of…" autocomplete="off" />
+            <input type="text" name="win" placeholder="Something you’re a little proud of…" autocomplete="off"
+                   value="{{ saved.wins[1] if saved and saved.wins|length > 1 else '' }}" />
           </label>
           <label class="field">
             <span class="num">3</span>
-            <input type="text" name="win" placeholder="A moment that went right…" autocomplete="off" />
+            <input type="text" name="win" placeholder="A moment that went right…" autocomplete="off"
+                   value="{{ saved.wins[2] if saved and saved.wins|length > 2 else '' }}" />
           </label>
         </fieldset>
 
@@ -151,7 +154,8 @@
           <legend>One thing I can do better tomorrow</legend>
           <label class="field field-wide">
             <span class="num heart">♡</span>
-            <input type="text" name="improve" placeholder="Gently, without judgment…" autocomplete="off" />
+            <input type="text" name="improve" placeholder="Gently, without judgment…" autocomplete="off"
+                   value="{{ saved.improve if saved else '' }}" />
           </label>
         </fieldset>
 
@@ -159,7 +163,8 @@
           <legend>What filled your day?</legend>
           <div class="tag-row">
             {% for a in activities %}
-            <button type="button" class="tag" data-tag="{{ a.id }}" aria-pressed="false">
+            <button type="button" class="tag {% if a.id in saved_tags %}on{% endif %}"
+                    data-tag="{{ a.id }}" aria-pressed="{{ 'true' if a.id in saved_tags else 'false' }}">
               <img src="{{ url_for('static', filename='icons/' + a.id + '.svg') }}" alt="" width="42" height="42" />
               <span>{{ a.label }}</span>
             </button>
@@ -170,14 +175,13 @@
         <fieldset class="diary">
           <legend>Anything else on your mind?</legend>
           <textarea name="diary" class="diary-box" rows="4"
-                    placeholder="Write freely — whatever you'd like to remember about today…"></textarea>
+                    placeholder="Write freely — whatever you'd like to remember about today…">{{ saved.diary if saved else '' }}</textarea>
         </fieldset>
 
         <input type="hidden" id="date" value="{{ date_str }}" />
         <button type="submit" class="save-btn">Save my reflection</button>
         <p class="saved-msg" id="saved-msg">
-          {% if today_count == 1 %}You've written 1 note today — find it in your calendar. 🌙
-          {% elif today_count > 1 %}You've written {{ today_count }} notes today — they're all in your calendar. 🌙{% endif %}
+          {% if saved %}Saved — your reflection stays here whenever you come back. 🌙{% endif %}
         </p>
       </form>
     </section>
@@ -226,18 +230,8 @@
         });
         const out = await res.json().catch(() => ({}));
         if (res.ok && out.ok) {
-          // Clear everything for a fresh note — each save is its own entry.
-          winInputs.forEach(i => (i.value = ""));
-          improveInput.value = "";
-          diaryInput.value = "";
-          document.querySelectorAll(".tag.on").forEach(b => {
-            b.classList.remove("on");
-            b.setAttribute("aria-pressed", "false");
-          });
-          const n = out.count || 1;
-          msg.textContent = n > 1
-            ? `Saved 🌙 That's ${n} notes today — all kept in your calendar.`
-            : "Saved 🌙 It's safe in your calendar — write more anytime.";
+          // Keep everything on screen — your reflection persists, never cleared.
+          msg.textContent = "Saved 🌙 Your reflection stays right here whenever you come back.";
         } else if (out.empty) {
           msg.textContent = "Write a little something first 🌷";
         } else {

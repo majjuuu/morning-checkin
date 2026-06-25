@@ -303,9 +303,9 @@ def index():
 
     note = note_for_day(events, today) if not calendar_error else pick_for_day(NOTES_BALANCED, today, salt=1)
 
-    # The form always starts blank — each save is a fresh note. We just count
-    # how many notes today already has, to gently acknowledge them.
-    today_count = len(load_notes(date_str))
+    # Pre-fill the form with today's saved reflection so it never disappears.
+    todays_notes = load_notes(date_str)
+    saved = todays_notes[-1] if todays_notes else None
 
     # Current weekly focus/goal (the most recent one written).
     weekly_entries = load_weekly()
@@ -327,7 +327,8 @@ def index():
         date_str=date_str,
         display_name=(cfg.get("display_name") or "").strip(),
         activities=ACTIVITIES,
-        today_count=today_count,
+        saved=saved,
+        saved_tags=(saved.get("tags", []) if saved else []),
         companion=pick_for_day(COMPANIONS, today),
         weekly=weekly,
         weekly_set_pretty=weekly_set_pretty,
@@ -357,14 +358,13 @@ def save():
         "diary": diary,
         "saved_at": dt.datetime.now().isoformat(timespec="seconds"),
     }
-    # Append to the day's notes — never overwrite earlier saves.
-    notes = load_notes(date_str)
-    notes.append(note)
+    # One entry per day — saving updates today's reflection so it persists
+    # (and never disappears) instead of clearing the form.
     journal_path(date_str).write_text(
-        json.dumps({"date": date_str, "notes": notes}, ensure_ascii=False, indent=2),
+        json.dumps({"date": date_str, "notes": [note]}, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
-    return jsonify({"ok": True, "count": len(notes)})
+    return jsonify({"ok": True})
 
 
 @app.route("/weekly/save", methods=["POST"])
